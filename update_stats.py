@@ -17,6 +17,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import base64
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from html import escape
@@ -30,7 +31,7 @@ import sys
 import time
 from typing import Any
 from urllib.error import HTTPError, URLError
-from urllib.parse import urlencode
+from urllib.parse import quote, urlencode
 from urllib.request import Request, urlopen
 
 
@@ -288,6 +289,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--traction-days", type=int, default=TRACTION_DAYS)
     parser.add_argument("--months", type=int, default=3, help="recency window in calendar months")
     parser.add_argument("--skip-commit-counts", action="store_true", help="skip per-repo commit counts")
+    parser.add_argument("--skip-content", action="store_true", help="skip README and repository content enrichment")
     return parser.parse_args()
 
 
@@ -523,9 +525,11 @@ def normalize_repo(item: dict[str, Any]) -> dict[str, Any]:
         "pushed_at": item.get("pushed_at") or "",
         "updated_at": item.get("updated_at") or "",
         "created_at": item.get("created_at") or "",
+        "default_branch": item.get("default_branch") or "main",
         "license": license_spdx,
         "commits": None,
         "commits_30d": None,
+        "content": {},
     }
 
 
@@ -555,6 +559,173 @@ def commit_count(client: GitHubClient, full_name: str, since: datetime | None = 
     if not isinstance(data, list) or not data:
         return 0
     return link_last_page(headers.get("link"), len(data))
+
+
+def enrich_content_profiles(client: GitHubClient, repos: list[dict[str, Any]]) -> None:
+    for index, repo in enumerate(repos, start=1):
+        full_name = repo["full_name"]
+        print(f"[{index:03d}/{len(repos):03d}] content {full_name}")
+        repo["content"] = repo_content_profile(client, repo)
+
+
+def repo_content_profile(client: GitHubClient, repo: dict[str, Any]) -> dict[str, Any]:
+    readme_text = fetch_readme_text(client, repo["full_name"])
+    headings = extract_markdown_headings(readme_text)
+    tree_paths = fetch_tree_paths(client, repo["full_name"], repo.get("default_branch") or "main")
+    return build_content_profile(readme_text, headings, tree_paths)
+
+
+def fetch_readme_text(client: GitHubClient, full_name: str) -> str:
+    try:
+        data, _ = client.request(f"/repos/{full_name}/readme")
+    except RuntimeError as exc:
+        print(f"  warning: README unavailable for {full_name}: {exc}", file=sys.stderr)
+        return ""
+    content = data.get("content")
+    if not isinstance(content, str):
+        return ""
+    try:
+        return base64.b64decode(content, validate=False).decode("utf-8", errors="replace")
+    except (ValueError, TypeError):
+        return ""
+
+
+def fetch_tree_paths(client: GitHubClient, full_name: str, branch: str) -> list[str]:
+    safe_branch = quote(branch, safe="")
+    try:
+        data, _ = client.request(f"/repos/{full_name}/git/trees/{safe_branch}", {"recursive": "1"})
+    except RuntimeError as exc:
+        print(f"  warning: tree unavailable for {full_name}: {exc}", file=sys.stderr)
+        return []
+    tree = data.get("tree")
+    if not isinstance(tree, list):
+        return []
+    paths = []
+    for item in tree:
+        path = item.get("path") if isinstance(item, dict) else None
+        if isinstance(path, str) and path:
+            paths.append(path)
+    return paths
+
+
+def extract_markdown_headings(text: str, limit: int = 6) -> list[str]:
+    headings: list[str] = []
+    for line in text.splitlines():
+        stripped = line.strip()
+        if not stripped.startswith("#"):
+            continue
+        match = re.match(r"^(#{1,4})\s+(.+?)\s*$", stripped)
+        if not match:
+            continue
+        level = len(match.group(1))
+        label = clean_heading(match.group(2))
+        if not label:
+            continue
+        if level == 1 and not headings:
+            continue
+        if label.lower() in {item.lower() for item in headings}:
+            continue
+        headings.append(label)
+        if len(headings) >= limit:
+            break
+    return headings
+
+
+def clean_heading(value: str) -> str:
+    value = re.sub(r"<[^>]+>", "", value)
+    value = re.sub(r"\]\([^)]+\)", "]", value)
+    value = re.sub(r"https?://\S+", "", value)
+    value = value.replace("[", "").replace("]", "")
+    value = re.sub(r"[`*_~]", "", value)
+    value = re.sub(r"\s+", " ", value).strip(" #:-")
+    return value[:72]
+
+
+def build_content_profile(readme_text: str, headings: list[str], paths: list[str]) -> dict[str, Any]:
+    lower_paths = [path.lower() for path in paths]
+    root_dirs = sorted({path.split("/", 1)[0] for path in paths if "/" in path})
+    root_files = sorted({path for path in paths if "/" not in path})
+    important_paths = select_important_paths(paths, root_dirs, root_files)
+    badges = content_badges(lower_paths, root_dirs, root_files, headings)
+    return {
+        "has_readme": bool(readme_text.strip()),
+        "readme_sections": headings[:6],
+        "important_paths": important_paths[:7],
+        "badges": badges[:8],
+        "tree_count": len(paths),
+    }
+
+
+def select_important_paths(paths: list[str], root_dirs: list[str], root_files: list[str]) -> list[str]:
+    lower_to_path = {path.lower(): path for path in paths}
+    candidates: list[str] = []
+    priority = (
+        "README.md",
+        "docs/",
+        "examples/",
+        "example/",
+        "samples/",
+        "sample/",
+        "notebooks/",
+        "src/",
+        "packages/",
+        "apps/",
+        "app/",
+        "python/",
+        "javascript/",
+        "typescript/",
+        "openapi.yaml",
+        "openapi.json",
+        "package.json",
+        "pyproject.toml",
+        "setup.py",
+        "requirements.txt",
+        "go.mod",
+        "Cargo.toml",
+        "Dockerfile",
+    )
+    roots = {f"{item}/" for item in root_dirs}
+    files = set(root_files)
+    for item in priority:
+        lower = item.lower()
+        if item.endswith("/") and lower[:-1] in {root.lower() for root in root_dirs}:
+            candidates.append(item)
+        elif item in files:
+            candidates.append(item)
+        elif lower in lower_to_path:
+            candidates.append(lower_to_path[lower])
+
+    for root in ("docs", "examples", "samples", "notebooks", "src", "packages", "apps", "tests"):
+        if f"{root}/" in roots and f"{root}/" not in candidates:
+            candidates.append(f"{root}/")
+
+    seen: set[str] = set()
+    result: list[str] = []
+    for path in candidates:
+        key = path.lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        result.append(path)
+    return result
+
+
+def content_badges(lower_paths: list[str], root_dirs: list[str], root_files: list[str], headings: list[str]) -> list[str]:
+    roots = {root.lower() for root in root_dirs}
+    files = {file.lower() for file in root_files}
+    all_text = " ".join([*lower_paths, *[heading.lower() for heading in headings]])
+    checks: tuple[tuple[str, bool], ...] = (
+        ("README", bool(headings)),
+        ("Docs", "docs" in roots or "documentation" in all_text),
+        ("Examples", any(root in roots for root in ("examples", "example", "samples", "sample")) or "example" in all_text),
+        ("Tests", any(root in roots for root in ("test", "tests", "testing")) or "/test" in all_text),
+        ("Packages", any(file in files for file in ("package.json", "pyproject.toml", "setup.py", "go.mod", "cargo.toml", "pom.xml", "build.gradle", "gemfile", "mix.exs"))),
+        ("Notebooks", any(path.endswith(".ipynb") for path in lower_paths)),
+        ("Docker", "dockerfile" in files or "docker" in roots),
+        ("OpenAPI", any("openapi" in path for path in lower_paths)),
+        ("Workflows", any(path.startswith(".github/workflows/") for path in lower_paths)),
+    )
+    return [label for label, present in checks if present]
 
 
 def cluster_repo(repo: dict[str, Any]) -> Cluster:
@@ -766,14 +937,14 @@ def repo_row(repo: dict[str, Any], rank: int | None = None, include_cluster: boo
     if rank is not None:
         cells.append(f'<td class="rank-cell">{rank}</td>')
         cells.append(f"<td>{name_cell}</td>")
-        cells.append(description_cell(desc, topic_html))
+        cells.append(description_cell(repo, desc, topic_html))
         if include_cluster:
             cells.append(cluster_cell(repo, linked=include_traction))
         cells.append(f'<td><span class="tag tag-{language_class(repo["language"])}">{language}</span></td>')
     else:
         cells.append(f"<td>{name_cell}</td>")
         cells.append(f'<td><span class="tag tag-{language_class(repo["language"])}">{language}</span></td>')
-        cells.append(description_cell(desc, topic_html))
+        cells.append(description_cell(repo, desc, topic_html))
         if include_cluster:
             cells.append(cluster_cell(repo, linked=include_traction))
     cells.append(github_cell(repo, include_activity=include_traction))
@@ -785,8 +956,45 @@ def repo_row(repo: dict[str, Any], rank: int | None = None, include_cluster: boo
     )
 
 
-def description_cell(desc: str, topic_html: str) -> str:
-    return f'<td class="description-cell">{desc}<div class="topic-row">{topic_html}</div></td>'
+def description_cell(repo: dict[str, Any], desc: str, topic_html: str) -> str:
+    return f'<td class="description-cell">{desc}<div class="topic-row">{topic_html}</div>{content_profile_html(repo)}</td>'
+
+
+def content_profile_html(repo: dict[str, Any]) -> str:
+    content = repo.get("content") or {}
+    if not isinstance(content, dict):
+        return ""
+
+    sections = [escape(item) for item in content.get("readme_sections", []) if item]
+    paths = [str(item) for item in content.get("important_paths", []) if item]
+    badges = [escape(item) for item in content.get("badges", []) if item]
+    blocks = []
+    if sections:
+        blocks.append(
+            '<div class="content-line"><span class="content-label">README</span>'
+            f'<span class="content-text">{" · ".join(sections[:5])}</span></div>'
+        )
+    if paths:
+        path_links = " ".join(content_path_link(repo, path) for path in paths[:6])
+        blocks.append(
+            '<div class="content-line"><span class="content-label">Paths</span>'
+            f'<span class="content-text content-paths">{path_links}</span></div>'
+        )
+    if badges:
+        badge_html = "".join(f'<span class="content-badge">{badge}</span>' for badge in badges[:8])
+        blocks.append(f'<div class="content-badge-row">{badge_html}</div>')
+    if not blocks:
+        return ""
+    return f'<div class="content-profile">{"".join(blocks)}</div>'
+
+
+def content_path_link(repo: dict[str, Any], path: str) -> str:
+    branch = quote(str(repo.get("default_branch") or "main"), safe="")
+    clean_path = path.rstrip("/")
+    encoded_path = quote(clean_path, safe="/")
+    kind = "tree" if path.endswith("/") else "blob"
+    url = f'{repo["url"]}/{kind}/{branch}/{encoded_path}'
+    return f'<a class="content-path" href="{escape(url)}" target="_blank" rel="noreferrer">{escape(path)}</a>'
 
 
 def cluster_cell(repo: dict[str, Any], linked: bool = False) -> str:
@@ -842,7 +1050,7 @@ def section_table(cluster: Cluster, repos: list[dict[str, Any]], top_n: int) -> 
         <tr>
           <th>Repository</th>
           <th>Language</th>
-          <th>Description</th>
+          <th>Description & Content</th>
           <th>GitHub</th>
         </tr>
       </thead>
@@ -878,7 +1086,7 @@ def source_section_table(section: SourceSection, repos: list[dict[str, Any]]) ->
         <tr>
           <th>Repository</th>
           <th>Language</th>
-          <th>Description</th>
+          <th>Description & Content</th>
           <th>GitHub</th>
         </tr>
       </thead>
@@ -919,7 +1127,7 @@ def traction_table(repos: list[dict[str, Any]], days: int) -> str:
         <tr>
           <th>Repository</th>
           <th>Language</th>
-          <th>Description</th>
+          <th>Description & Content</th>
           <th>Cluster</th>
           <th>GitHub</th>
         </tr>
@@ -966,6 +1174,7 @@ def render_html(
     groups = grouped_repos(repos, args.top_per_cluster)
     total_stars = sum(repo["stars"] for repo in repos)
     total_commits_30d = sum(int(repo.get("commits_30d") or 0) for repo in repos)
+    total_content_profiles = sum(1 for repo in repos if (repo.get("content") or {}).get("has_readme"))
     sections = "\n".join(section_table(cluster, groups[cluster.key], args.top_per_cluster) for cluster in CLUSTERS)
     extra_section_html = "\n".join(
         source_section_table(section, extra_sections.get(section.key, []))
@@ -1327,25 +1536,25 @@ def render_html(
 
   table {{
     width: 100%;
-    min-width: 1120px;
+    min-width: 1240px;
     border-collapse: collapse;
     font-size: 13px;
     table-layout: fixed;
   }}
 
   .traction-section table {{
-    min-width: 1220px;
+    min-width: 1340px;
   }}
 
-  .col-repository {{ width: 22%; }}
+  .col-repository {{ width: 20%; }}
   .col-language {{ width: 10%; }}
-  .col-description {{ width: 48%; }}
+  .col-description {{ width: 52%; }}
   .col-github {{ width: 20%; }}
-  .col-traction-repository {{ width: 17%; }}
-  .col-traction-description {{ width: 48%; }}
+  .col-traction-repository {{ width: 16%; }}
+  .col-traction-description {{ width: 50%; }}
   .col-traction-cluster {{ width: 12%; }}
   .col-traction-language {{ width: 8%; }}
-  .col-traction-github {{ width: 15%; }}
+  .col-traction-github {{ width: 14%; }}
 
   th {{
     position: sticky;
@@ -1427,6 +1636,69 @@ def render_html(
     flex-wrap: wrap;
     gap: 4px;
     margin-top: 7px;
+  }}
+
+  .content-profile {{
+    margin-top: 9px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(43, 44, 48, 0.78);
+    color: var(--text-muted);
+  }}
+
+  .content-line {{
+    display: grid;
+    grid-template-columns: 54px minmax(0, 1fr);
+    gap: 8px;
+    align-items: start;
+    margin-top: 4px;
+    font-size: 11px;
+    line-height: 1.45;
+  }}
+
+  .content-label {{
+    color: var(--openai);
+    font: 700 10px 'JetBrains Mono', monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }}
+
+  .content-text {{
+    min-width: 0;
+  }}
+
+  .content-paths {{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }}
+
+  .content-path,
+  .content-badge {{
+    display: inline-block;
+    border: 1px solid rgba(43, 44, 48, 0.95);
+    border-radius: 4px;
+    padding: 1px 6px;
+    background: rgba(8, 11, 13, 0.4);
+    color: #c7d1cc;
+    font: 700 10px 'JetBrains Mono', monospace;
+    text-decoration: none;
+  }}
+
+  .content-path:hover {{
+    color: var(--openai);
+    border-color: var(--openai);
+  }}
+
+  .content-badge-row {{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 6px;
+  }}
+
+  .content-badge {{
+    color: var(--cyan);
+    background: rgba(32, 217, 199, 0.08);
   }}
 
   .badge {{
@@ -1575,6 +1847,7 @@ def render_html(
       <div class="metric-card"><strong>{len(repos)}</strong><span>qualified repos</span></div>
       <div class="metric-card"><strong>{fmt_number(total_stars)}</strong><span>combined stars</span></div>
       <div class="metric-card"><strong>{fmt_number(total_commits_30d)}</strong><span>commits in {args.traction_days}d</span></div>
+      <div class="metric-card"><strong>{total_content_profiles}</strong><span>README profiles</span></div>
       <div class="metric-card"><strong>{len(CLUSTERS)}</strong><span>purpose clusters</span></div>
     </div>
     <nav class="jump-nav" aria-label="Section links">
@@ -1698,6 +1971,8 @@ def main() -> int:
             for key, section_repos in extra_sections.items()
         }
         all_repos = repos + [repo for section_repos in extra_sections.values() for repo in section_repos]
+    if not args.skip_content:
+        enrich_content_profiles(client, all_repos)
 
     history_path = Path(args.history)
     history = read_history(history_path)

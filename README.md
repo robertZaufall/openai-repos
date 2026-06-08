@@ -13,7 +13,10 @@ Included repositories match this filter:
 
 The page is tuned to surface repositories with both recent traction and broad
 audience: the lead table blends recent commits, freshness, stars, and forks,
-while each purpose cluster is sorted by stars.
+while each purpose cluster is sorted by stars. Rows also include content
+signals from each repository's README and tree, such as README sections, docs,
+examples, tests, package manifests, notebooks, Docker files, OpenAPI specs, and
+workflow files.
 
 ## Open locally
 
@@ -32,8 +35,9 @@ python3 update_stats.py
 ```
 
 The script fetches stars, forks, total commits, recent commits, last commit
-dates, primary language, topics, and descriptions from GitHub. It rewrites the
-fresh-traction table, the cluster tables, and `stats_history.json`.
+dates, primary language, topics, descriptions, README headings, and repository
+tree content signals from GitHub. It rewrites the fresh-traction table, the
+cluster tables, and `stats_history.json`.
 
 For local runs, authenticate with the GitHub CLI or set `GITHUB_TOKEN`:
 
