@@ -50,6 +50,7 @@ AUTO_KEYWORD_TERMS: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("Agents", ("agents", "agent")),
     ("Apps SDK", ("apps sdk", "apps-sdk")),
     ("ChatKit", ("chatkit", "chat kit")),
+    ("Plugins", ("plugin", "plugins")),
     ("Realtime", ("realtime", "real-time")),
     ("Voice", ("voice", "speech", "audio")),
     ("Evals", ("evals", "evaluation")),
@@ -746,6 +747,7 @@ def cluster_repo(repo: dict[str, Any]) -> Cluster:
         "euphony": "research-models",
         "imagegencam": "realtime-voice-multimodal",
         "orchard": "agents-codex",
+        "plugins": "agents-codex",
         "vetu": "agents-codex",
     }
     clusters_by_key = {cluster.key: cluster for cluster in CLUSTERS}
