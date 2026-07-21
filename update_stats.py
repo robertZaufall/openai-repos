@@ -69,6 +69,10 @@ AUTO_KEYWORD_TERMS: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("Rust", ("rust",)),
     ("Docker", ("docker",)),
     ("LLM", ("llm",)),
+    ("Workshop", ("workshop", "build hours", "build-hours")),
+    ("Harmony", ("harmony", "euphony")),
+    ("Image Generation", ("image generation", "imagegencam", "image gen")),
+    ("Virtualization", ("virtualization", "virtual machines", "virtual machine", "vms")),
 )
 SUBSTRING_KEYWORDS = {
     "OpenAI API",
@@ -737,6 +741,18 @@ def cluster_repo(repo: dict[str, Any]) -> Cluster:
             " ".join(repo.get("topics") or []),
         ]
     ).lower()
+    name_overrides = {
+        "build-hours": "cookbooks-examples",
+        "euphony": "research-models",
+        "imagegencam": "realtime-voice-multimodal",
+        "orchard": "agents-codex",
+        "vetu": "agents-codex",
+    }
+    clusters_by_key = {cluster.key: cluster for cluster in CLUSTERS}
+    name_override = name_overrides.get(repo["name"].lower())
+    if name_override:
+        return clusters_by_key[name_override]
+
     override_terms = {
         "safety-governance": (
             "guardrail",
@@ -804,7 +820,6 @@ def cluster_repo(repo: dict[str, Any]) -> Cluster:
             "transformer-debugger",
         ),
     }
-    clusters_by_key = {cluster.key: cluster for cluster in CLUSTERS}
     for key, terms in override_terms.items():
         if any(term_matches(haystack, term) for term in terms):
             return clusters_by_key[key]
@@ -1022,8 +1037,7 @@ def github_cell(repo: dict[str, Any], include_activity: bool = False) -> str:
       <span class="fork-count">⑂ {fmt_number(repo["forks"])}</span>
       <span class="commit-count">⟳ {fmt_number(repo.get("commits"))}</span>
     </div>
-    <span class="last-updated">⏱ {fmt_date(repo["pushed_at"])}</span>
-    {activity}
+    <span class="last-updated">⏱ {fmt_date(repo["pushed_at"])}</span>{activity}
   </td>"""
 
 
