@@ -74,6 +74,7 @@ AUTO_KEYWORD_TERMS: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("Harmony", ("harmony", "euphony")),
     ("Image Generation", ("image generation", "imagegencam", "image gen")),
     ("Virtualization", ("virtualization", "virtual machines", "virtual machine", "vms")),
+    ("Security", ("security", "vulnerability", "vulnerabilities")),
 )
 SUBSTRING_KEYWORDS = {
     "OpenAI API",
@@ -744,10 +745,17 @@ def cluster_repo(repo: dict[str, Any]) -> Cluster:
     ).lower()
     name_overrides = {
         "build-hours": "cookbooks-examples",
+        "codex-plugin-cc": "agents-codex",
+        "codex-security": "safety-governance",
         "euphony": "research-models",
+        "gabriel": "evals-benchmarks",
         "imagegencam": "realtime-voice-multimodal",
         "orchard": "agents-codex",
+        "planttalk": "realtime-voice-multimodal",
         "plugins": "agents-codex",
+        "role-specific-plugins": "agents-codex",
+        "tart": "agents-codex",
+        "tunnel-client": "agents-codex",
         "vetu": "agents-codex",
     }
     clusters_by_key = {cluster.key: cluster for cluster in CLUSTERS}
