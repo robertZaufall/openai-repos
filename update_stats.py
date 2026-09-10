@@ -750,6 +750,7 @@ def cluster_repo(repo: dict[str, Any]) -> Cluster:
         "euphony": "research-models",
         "gabriel": "evals-benchmarks",
         "imagegencam": "realtime-voice-multimodal",
+        "navierstokesandeuler": "research-models",
         "orchard": "agents-codex",
         "planttalk": "realtime-voice-multimodal",
         "plugins": "agents-codex",
