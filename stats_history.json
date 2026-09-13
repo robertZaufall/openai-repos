@@ -23554,6 +23554,181 @@
           "stars": 108933
         }
       }
+    },
+    {
+      "date": "2026-09-13",
+      "repos": {
+        "openai/GABRIEL": {
+          "forks": 69,
+          "pushed_at": "2026-07-15T19:04:05Z",
+          "stars": 430
+        },
+        "openai/NavierStokesAndEuler": {
+          "forks": 182,
+          "pushed_at": "2026-09-10T15:14:13Z",
+          "stars": 1836
+        },
+        "openai/build-hours": {
+          "forks": 182,
+          "pushed_at": "2026-07-24T03:19:27Z",
+          "stars": 846
+        },
+        "openai/chatkit-js": {
+          "forks": 188,
+          "pushed_at": "2026-07-31T23:57:41Z",
+          "stars": 1958
+        },
+        "openai/codex": {
+          "forks": 19059,
+          "pushed_at": "2026-09-13T06:15:47Z",
+          "stars": 123681
+        },
+        "openai/codex-action": {
+          "forks": 168,
+          "pushed_at": "2026-09-11T00:26:35Z",
+          "stars": 1234
+        },
+        "openai/codex-plugin-cc": {
+          "forks": 2283,
+          "pushed_at": "2026-07-08T00:17:31Z",
+          "stars": 33088
+        },
+        "openai/codex-security": {
+          "forks": 783,
+          "pushed_at": "2026-09-13T03:43:58Z",
+          "stars": 10670
+        },
+        "openai/gpt-oss": {
+          "forks": 2154,
+          "pushed_at": "2026-07-24T18:56:01Z",
+          "stars": 20396
+        },
+        "openai/model_spec": {
+          "forks": 105,
+          "pushed_at": "2026-08-18T10:57:34Z",
+          "stars": 830
+        },
+        "openai/openai-agents-js": {
+          "forks": 966,
+          "pushed_at": "2026-09-13T05:47:41Z",
+          "stars": 3802
+        },
+        "openai/openai-agents-python": {
+          "forks": 4718,
+          "pushed_at": "2026-09-12T04:40:28Z",
+          "stars": 29394
+        },
+        "openai/openai-chatkit-advanced-samples": {
+          "forks": 302,
+          "pushed_at": "2026-08-01T01:12:25Z",
+          "stars": 652
+        },
+        "openai/openai-cli": {
+          "forks": 58,
+          "pushed_at": "2026-09-12T00:58:45Z",
+          "stars": 690
+        },
+        "openai/openai-cookbook": {
+          "forks": 12860,
+          "pushed_at": "2026-09-12T23:35:37Z",
+          "stars": 75948
+        },
+        "openai/openai-cua-sample-app": {
+          "forks": 430,
+          "pushed_at": "2026-09-04T21:39:16Z",
+          "stars": 1845
+        },
+        "openai/openai-dotnet": {
+          "forks": 421,
+          "pushed_at": "2026-09-12T00:24:41Z",
+          "stars": 2691
+        },
+        "openai/openai-go": {
+          "forks": 350,
+          "pushed_at": "2026-09-11T19:55:54Z",
+          "stars": 3457
+        },
+        "openai/openai-guardrails-python": {
+          "forks": 49,
+          "pushed_at": "2026-09-11T22:46:45Z",
+          "stars": 248
+        },
+        "openai/openai-java": {
+          "forks": 263,
+          "pushed_at": "2026-09-12T15:54:22Z",
+          "stars": 1530
+        },
+        "openai/openai-node": {
+          "forks": 1602,
+          "pushed_at": "2026-09-11T19:54:22Z",
+          "stars": 11172
+        },
+        "openai/openai-openapi": {
+          "forks": 526,
+          "pushed_at": "2026-09-11T03:10:07Z",
+          "stars": 2507
+        },
+        "openai/openai-python": {
+          "forks": 5188,
+          "pushed_at": "2026-09-11T19:54:46Z",
+          "stars": 31620
+        },
+        "openai/openai-ruby": {
+          "forks": 63,
+          "pushed_at": "2026-09-11T19:56:57Z",
+          "stars": 459
+        },
+        "openai/orchard": {
+          "forks": 57,
+          "pushed_at": "2026-09-10T23:57:11Z",
+          "stars": 534
+        },
+        "openai/planttalk": {
+          "forks": 33,
+          "pushed_at": "2026-06-30T02:26:08Z",
+          "stars": 307
+        },
+        "openai/plugins": {
+          "forks": 863,
+          "pushed_at": "2026-09-11T22:01:06Z",
+          "stars": 6559
+        },
+        "openai/role-specific-plugins": {
+          "forks": 89,
+          "pushed_at": "2026-07-13T23:17:20Z",
+          "stars": 540
+        },
+        "openai/skills": {
+          "forks": 1806,
+          "pushed_at": "2026-09-08T20:35:26Z",
+          "stars": 27034
+        },
+        "openai/symphony": {
+          "forks": 2800,
+          "pushed_at": "2026-09-09T21:52:09Z",
+          "stars": 27171
+        },
+        "openai/tart": {
+          "forks": 361,
+          "pushed_at": "2026-09-09T22:10:21Z",
+          "stars": 6743
+        },
+        "openai/tiktoken": {
+          "forks": 1613,
+          "pushed_at": "2026-08-17T05:25:57Z",
+          "stars": 19234
+        },
+        "openai/tunnel-client": {
+          "forks": 77,
+          "pushed_at": "2026-09-12T22:52:31Z",
+          "stars": 381
+        },
+        "openai/whisper": {
+          "forks": 13205,
+          "pushed_at": "2026-08-31T17:19:19Z",
+          "stars": 108961
+        }
+      }
     }
   ]
 }
