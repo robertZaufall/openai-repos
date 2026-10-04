@@ -27136,7 +27136,7 @@
         "openai/codex": {
           "forks": 20011,
           "pushed_at": "2026-10-04T07:12:21Z",
-          "stars": 127787
+          "stars": 127800
         },
         "openai/codex-action": {
           "forks": 175,
@@ -27146,22 +27146,22 @@
         "openai/codex-plugin-cc": {
           "forks": 2370,
           "pushed_at": "2026-07-08T00:17:31Z",
-          "stars": 33822
+          "stars": 33828
         },
         "openai/codex-security": {
           "forks": 838,
-          "pushed_at": "2026-10-04T07:54:33Z",
-          "stars": 10961
+          "pushed_at": "2026-10-04T11:51:52Z",
+          "stars": 10962
         },
         "openai/gpt-oss": {
           "forks": 2162,
           "pushed_at": "2026-07-24T18:56:01Z",
-          "stars": 20453
+          "stars": 20454
         },
         "openai/mcp-extensions": {
           "forks": 43,
           "pushed_at": "2026-10-02T21:37:13Z",
-          "stars": 732
+          "stars": 737
         },
         "openai/model_spec": {
           "forks": 105,
@@ -27174,9 +27174,9 @@
           "stars": 3887
         },
         "openai/openai-agents-python": {
-          "forks": 4841,
+          "forks": 4842,
           "pushed_at": "2026-10-02T18:52:10Z",
-          "stars": 29826
+          "stars": 29827
         },
         "openai/openai-chatkit-advanced-samples": {
           "forks": 308,
@@ -27185,13 +27185,13 @@
         },
         "openai/openai-cli": {
           "forks": 64,
-          "pushed_at": "2026-10-04T07:45:16Z",
+          "pushed_at": "2026-10-04T08:45:18Z",
           "stars": 708
         },
         "openai/openai-cookbook": {
           "forks": 12909,
           "pushed_at": "2026-10-03T03:46:22Z",
-          "stars": 76337
+          "stars": 76338
         },
         "openai/openai-cua-sample-app": {
           "forks": 435,
@@ -27201,7 +27201,7 @@
         "openai/openai-dotnet": {
           "forks": 424,
           "pushed_at": "2026-10-02T18:41:05Z",
-          "stars": 2702
+          "stars": 2703
         },
         "openai/openai-go": {
           "forks": 351,
@@ -27221,17 +27221,17 @@
         "openai/openai-node": {
           "forks": 1611,
           "pushed_at": "2026-10-02T15:49:49Z",
-          "stars": 11200
+          "stars": 11199
         },
         "openai/openai-openapi": {
           "forks": 527,
-          "pushed_at": "2026-10-04T08:00:08Z",
+          "pushed_at": "2026-10-04T08:07:03Z",
           "stars": 2542
         },
         "openai/openai-python": {
-          "forks": 7039,
+          "forks": 7064,
           "pushed_at": "2026-10-02T21:14:56Z",
-          "stars": 31742
+          "stars": 31740
         },
         "openai/openai-ruby": {
           "forks": 65,
@@ -27241,32 +27241,32 @@
         "openai/orchard": {
           "forks": 59,
           "pushed_at": "2026-10-01T17:37:36Z",
-          "stars": 554
+          "stars": 555
         },
         "openai/plugins": {
-          "forks": 944,
+          "forks": 945,
           "pushed_at": "2026-09-28T17:08:10Z",
-          "stars": 7285
+          "stars": 7292
         },
         "openai/role-specific-plugins": {
           "forks": 92,
           "pushed_at": "2026-09-30T16:49:50Z",
-          "stars": 551
+          "stars": 552
         },
         "openai/symphony": {
           "forks": 2855,
           "pushed_at": "2026-09-15T22:14:59Z",
-          "stars": 27522
+          "stars": 27526
         },
         "openai/tart": {
           "forks": 390,
           "pushed_at": "2026-09-30T11:39:28Z",
-          "stars": 7325
+          "stars": 7328
         },
         "openai/tiktoken": {
           "forks": 1631,
           "pushed_at": "2026-08-17T05:25:57Z",
-          "stars": 19379
+          "stars": 19380
         },
         "openai/tunnel-client": {
           "forks": 107,
@@ -27274,9 +27274,9 @@
           "stars": 530
         },
         "openai/whisper": {
-          "forks": 13329,
+          "forks": 13331,
           "pushed_at": "2026-08-31T17:19:19Z",
-          "stars": 109938
+          "stars": 109946
         }
       }
     }
