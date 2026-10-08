@@ -76,6 +76,16 @@ AUTO_KEYWORD_TERMS: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("Virtualization", ("virtualization", "virtual machines", "virtual machine", "vms")),
     ("Security", ("security", "vulnerability", "vulnerabilities")),
 )
+# Fallback descriptions used only while a repository's GitHub description is
+# empty. Each is the lead sentence of that repository's own README (checked
+# 2026-10-08); an upstream GitHub description always takes precedence.
+README_DESCRIPTION_FALLBACKS: dict[str, str] = {
+    "chatkit-js": "ChatKit is a batteries-included framework for building high-quality, AI-powered chat experiences.",
+    "codex-action": "Run Codex from a GitHub Actions workflow while keeping tight control over the privileges available to Codex.",
+    "math": "This repository contains mathematical manuscripts and supporting proof artifacts produced by an internal OpenAI model.",
+}
+# TypeScript ("ts"), Java ("java") and Go ("go") use word-boundary matching:
+# as substrings they fired on "agents", "certificates", "JavaScript", etc.
 SUBSTRING_KEYWORDS = {
     "OpenAI API",
     "OpenAPI",
@@ -83,12 +93,9 @@ SUBSTRING_KEYWORDS = {
     "ChatKit",
     "Realtime",
     "Python",
-    "TypeScript",
     "JavaScript",
-    "Go",
     ".NET",
     "C#",
-    "Java",
     "Ruby",
     "Rust",
 }
@@ -527,7 +534,8 @@ def normalize_repo(item: dict[str, Any]) -> dict[str, Any]:
         "name": item.get("name", ""),
         "full_name": item.get("full_name", ""),
         "url": item.get("html_url", ""),
-        "description": item.get("description") or "",
+        "description": item.get("description")
+        or README_DESCRIPTION_FALLBACKS.get(str(item.get("name", "")).lower(), ""),
         "language": item.get("language") or "Mixed",
         "topics": item.get("topics") or [],
         "stars": int(item.get("stargazers_count") or 0),
