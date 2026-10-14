@@ -75,6 +75,9 @@ AUTO_KEYWORD_TERMS: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("Image Generation", ("image generation", "imagegencam", "image gen")),
     ("Virtualization", ("virtualization", "virtual machines", "virtual machine", "vms")),
     ("Security", ("security", "vulnerability", "vulnerabilities")),
+    # Lean-certified mathematics releases (math, NavierStokesAndEuler,
+    # ten-proofs, PrimeGaps186, ...); word-boundary matching keeps "clean" out.
+    ("Formal Math", ("lean", "formalization", "formal proof", "proof artifacts", "proofs", "mathematics", "mathematical", "math")),
 )
 # Fallback descriptions used only while a repository's GitHub description is
 # empty. Each is the lead sentence of that repository's own README (checked
