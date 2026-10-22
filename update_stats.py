@@ -773,6 +773,7 @@ def cluster_repo(repo: dict[str, Any]) -> Cluster:
         "mcp-extensions": "apps-chatkit",
         "navierstokesandeuler": "research-models",
         "orchard": "agents-codex",
+        "php2shell-checker": "safety-governance",
         "planttalk": "realtime-voice-multimodal",
         "plugins": "agents-codex",
         "primegaps186": "research-models",
